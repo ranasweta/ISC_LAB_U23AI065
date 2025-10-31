@@ -1,0 +1,13 @@
+Public prime p:             4294967311
+Public generator g:         5
+---------------------------------
+Alice's private key a:      19696113
+Alice's public value A:     2162768016
+---------------------------------
+Bob's private key b:        676949653
+Bob's public value B:       3398108587
+---------------------------------
+Shared key (Alice) K_A:     127583574
+Shared key (Bob) K_B:       127583574
+---------------------------------
+Keys match:                 YES
