@@ -1,200 +1,119 @@
-#include <iostream>
-#include <string>
-#include <vector>
-#include <cstdint>
-#include <iomanip>
-#include <sstream>
+#include <bits/stdc++.h>
 using namespace std;
 
-class SHA1 {
-public:
-   
-    SHA1() {
-        reset();
+uint32_t leftRotate(uint32_t value, unsigned int bits) {
+    return (value << bits) | (value >> (32 - bits));
+}
+
+vector<uint8_t> toBytes(const string &input) {
+    return vector<uint8_t>(input.begin(), input.end());
+}
+
+string bytesToBinary(const vector<uint8_t> &bytes) {
+    string binary;
+    for (uint8_t b : bytes) {
+        for (int i = 7; i >= 0; --i)
+            binary += ((b >> i) & 1) ? '1' : '0';
+    }
+    return binary;
+}
+
+string sha1(const string &input, bool showPadded = true) {
+    vector<uint8_t> message = toBytes(input);
+
+    uint64_t originalBitLen = (uint64_t)message.size() * 8;
+
+    message.push_back(0x80);
+    while ((message.size() * 8) % 512 != 448)
+        message.push_back(0x00);
+
+    for (int i = 7; i >= 0; --i)
+        message.push_back((originalBitLen >> (i * 8)) & 0xFF);
+
+    if (showPadded) {
+        cout << "\n--- Padded Binary Message ---\n";
+        string binary = bytesToBinary(message);
+        for (size_t i = 0; i < binary.size(); i++) {
+            cout << binary[i];
+            if ((i + 1) % 64 == 0) cout << endl;
+        }
+        cout << "\nMessage Length (bits): " << binary.size() << endl;
     }
 
-    
-    void reset() {
-        H[0] = 0x67452301; 
-        H[1] = 0xEFCDAB89; 
-        H[2] = 0x98BADCFE;
-        H[3] = 0x10325476; 
-        H[4] = 0xC3D2E1F0; 
-        buffer.clear();
-        total_bit_count = 0;
-    }
+    uint32_t h0 = 0x67452301;
+    uint32_t h1 = 0xEFCDAB89;
+    uint32_t h2 = 0x98BADCFE;
+    uint32_t h3 = 0x10325476;
+    uint32_t h4 = 0xC3D2E1F0;
 
-    
-    void update(const string& data) {
-        update(vector<uint8_t>(data.begin(), data.end()));
-    }
+    for (size_t chunk = 0; chunk < message.size(); chunk += 64) {
+        uint32_t w[80];
 
-    void update(const vector<uint8_t>& data) {
-       
-        buffer.insert(buffer.end(), data.begin(), data.end());
-        total_bit_count += data.size() * 8;
-
-        
-        size_t offset = 0;
-        while (buffer.size() - offset >= 64) {
-            process_block(&buffer[offset]);
-            offset += 64;
-        }
-        
-       
-        buffer.erase(buffer.begin(), buffer.begin() + offset);
-    }
-
-   
-    string digest() {
-        
-        vector<uint8_t> final_buffer = buffer;
-        uint64_t final_bit_count = total_bit_count;
-
-        
-        final_buffer.push_back(0x80);
-
-        
-        while (final_buffer.size() % 64 != 56) {
-            final_buffer.push_back(0x00);
+        for (int i = 0; i < 16; ++i) {
+            w[i] = (message[chunk + i * 4] << 24) |
+                   (message[chunk + i * 4 + 1] << 16) |
+                   (message[chunk + i * 4 + 2] << 8) |
+                   (message[chunk + i * 4 + 3]);
         }
 
-        
-        for (int i = 7; i >= 0; --i) {
-            final_buffer.push_back((final_bit_count >> (i * 8)) & 0xFF);
-        }
+        for (int t = 16; t < 80; ++t)
+            w[t] = leftRotate(w[t - 3] ^ w[t - 8] ^ w[t - 14] ^ w[t - 16], 1);
 
-        
-        uint32_t final_H[5];
-        copy(H, H + 5, final_H);
-
-        for (size_t offset = 0; offset < final_buffer.size(); offset += 64) {
-            process_block(&final_buffer[offset], final_H);
-        }
-
-        
-        stringstream ss;
-        ss << hex << setfill('0');
-        for (int i = 0; i < 5; ++i) {
-            ss << setw(8) << final_H[i];
-        }
-        
-        reset();
-        
-        return ss.str();
-    }
-
-
-private:
-    uint32_t H[5];
-    vector<uint8_t> buffer;
-    uint64_t total_bit_count;
-
-    
-    inline uint32_t ROTL(uint32_t value, int shift) {
-        return (value << shift) | (value >> (32 - shift));
-    }
-
-   
-    void process_block(const uint8_t* block) {
-        process_block(block, H); // Call the main version
-    }
-
-
-    void process_block(const uint8_t* block, uint32_t* current_H) {
-        
-      
-        uint32_t W[80];
-        for (int t = 0; t < 16; ++t) {
-            W[t] = (block[t * 4]     << 24) |
-                   (block[t * 4 + 1] << 16) |
-                   (block[t * 4 + 2] << 8)  |
-                   (block[t * 4 + 3]);
-        }
-
-        
-        for (int t = 16; t < 80; ++t) {
-            W[t] = ROTL(1, W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16]); // 
-        }
-
-        // 4. Main loop 
-        uint32_t A = current_H[0];
-        uint32_t B = current_H[1];
-        uint32_t C = current_H[2];
-        uint32_t D = current_H[3];
-        uint32_t E = current_H[4];
+        uint32_t a = h0;
+        uint32_t b = h1;
+        uint32_t c = h2;
+        uint32_t d = h3;
+        uint32_t e = h4;
 
         for (int t = 0; t < 80; ++t) {
-            uint32_t f = 0;
-            uint32_t K = 0;
-
-            // 
+            uint32_t f, k;
             if (t <= 19) {
-                f = (B & C) | (~B & D);
-                K = 0x5A827999;
+                f = (b & c) | ((~b) & d);
+                k = 0x5A827999;
             } else if (t <= 39) {
-                f = B ^ C ^ D;
-                K = 0x6ED9EBA1;
+                f = b ^ c ^ d;
+                k = 0x6ED9EBA1;
             } else if (t <= 59) {
-                f = (B & C) | (B & D) | (C & D);
-                K = 0x8F1BBCDC;
+                f = (b & c) | (b & d) | (c & d);
+                k = 0x8F1BBCDC;
             } else {
-                f = B ^ C ^ D;
-                K = 0xCA62C1D6;
+                f = b ^ c ^ d;
+                k = 0xCA62C1D6;
             }
 
-            uint32_t temp = ROTL(5, A) + f + E + K + W[t];
-            E = D;
-            D = C;
-            C = ROTL(30, B);
-            B = A;
-            A = temp;
+            uint32_t temp = leftRotate(a, 5) + f + e + k + w[t];
+            e = d;
+            d = c;
+            c = leftRotate(b, 30);
+            b = a;
+            a = temp;
         }
 
-        // 5. Update [cite: 38]
-        current_H[0] += A;
-        current_H[1] += B;
-        current_H[2] += C;
-        current_H[3] += D;
-        current_H[4] += E;
+        h0 += a;
+        h1 += b;
+        h2 += c;
+        h3 += d;
+        h4 += e;
     }
-};
 
-// Main function to drive the class
+    stringstream ss;
+    ss << hex << setfill('0')
+       << setw(8) << h0
+       << setw(8) << h1
+       << setw(8) << h2
+       << setw(8) << h3
+       << setw(8) << h4;
+
+    return ss.str();
+}
+
 int main() {
-    SHA1 hasher;
-    
-    string input_message;
-    cout << "Enter a message to hash with SHA-1: ";
-    getline(cin, input_message);
+    string input;
+    cout << "Enter message: ";
+    getline(cin, input);
 
-    
-    hasher.update(input_message);
-    string digest = hasher.digest(); 
-
-    cout << "\nInput: \"" << input_message << "\"" << endl;
-    cout << "SHA-1 Digest: " << digest << endl;
-
-    
-    cout << "\n--- Verification Test Cases ---" << endl;
-
-    // Example 1 
-    hasher.update("The quick brown fox jumps over the lazy dog");
-    cout << "Test: \"The quick brown fox jumps over the lazy dog\"" << endl;
-    cout << "Expected: 2fd4e1c67a2d28fced849ee1bb76e7391b93eb12" << endl;
-    cout << "Actual:   " << hasher.digest() << endl;
-    
-    // Example 2 
-    hasher.update("Information Security and Cryptography Lab");
-    cout << "\nTest: \"Information Security and Cryptography Lab\"" << endl;
-    cout << "Expected: 2fd42e97d9111551984ac20b7e5dfa4432666165" << endl;
-    cout << "Actual:   " << hasher.digest() << endl;
-    
-    // Example 3 
-    hasher.update("");
-    cout << "\nTest: \"\" (empty string)" << endl;
-    cout << "Expected: da39a3ee5e6b4b0d3255bfef95601890afd80709" << endl;
-    cout << "Actual:   " << hasher.digest() << endl;
+    string digest = sha1(input, true);
+    cout << "\n--- SHA-1 Digest ---\n" << digest << endl;
 
     return 0;
 }
