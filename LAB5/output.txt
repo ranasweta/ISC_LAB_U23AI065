@@ -1,0 +1,17 @@
+Welcome to the Playfair Cipher Program!
+Choose an option:
+1. Encrypt
+2. Decrypt
+Enter your choice: 1
+Enter the keyword: monarchy
+
+Key Square:
+m o n a r
+c h y b d
+e f g i/j k
+l p q s t
+u v w x z
+
+Enter plaintext: balloon
+
+Ciphertext: IBSUPMNA
