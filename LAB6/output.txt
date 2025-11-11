@@ -1,0 +1,17 @@
+Encrypting...
+Plaintext block: [7, 4]
+Ciphertext block: [3, 15]
+Plaintext block: [11, 15]
+Ciphertext block: [11, 4]
+Final Ciphertext: DPLE
+
+Decrypting...
+Inverse Key Matrix K_inv:
+[ 15 17 ]
+[ 20 9 ]
+Ciphertext block: [3, 15]
+Decrypted block: [7, 4]
+Ciphertext block: [11, 4]
+Decrypted block: [11, 15]
+Final Decrypted Plaintext: HELP
+PS C:\Users\Sweta Rana\OneDrive\De

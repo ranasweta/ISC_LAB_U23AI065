@@ -1,0 +1,9 @@
+Testing DES Feistel Function
+==============================
+
+Input R:       0xF0AAF0AA
+Subkey K:      0x1B02EFFC7072
+Expected:      0x234AA9BB
+Your output:   0x234AA9BB
+
+TEST PASSED!
