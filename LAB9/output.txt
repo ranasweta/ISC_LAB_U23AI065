@@ -1,0 +1,13 @@
+=== RSA Implementation (Toy Example) ===
+p = 61
+q = 53
+n = 3233
+phi(n) = 3120
+Public exponent e = 17
+Private exponent d = 2753
+
+Message m = 65
+Ciphertext c = 2790
+Decrypted message m_dec = 65
+
+[OK] Decryption successful!
